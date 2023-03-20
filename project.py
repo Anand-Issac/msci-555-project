@@ -31,7 +31,7 @@ def haversine(lat1, lon1, lat2, lon2):
 """
 Builds a mapping between a team and all of their games
 """
-def create_team_schedule(schedule, teams):
+def create_team_schedule(schedule):
     team_schedule = {}
 
     # build a map between team and all of their games
@@ -53,9 +53,9 @@ for each team, go through each game of their schedule, and add the distance to g
 ex. schedule is like Raptors -> Celtics (home), Raptors -> Warriors (home), Cavs -> Raptors (home)
 distance = teams_distances(raptors, celtics) + teams_distances(celtics, warriors) + teams_distances(warriors, raptors)
 """
-def calculate_total_distance(schedule, teams):
+def calculate_total_distance(schedule):
     total_dist = 0
-    team_schedule = create_team_schedule(schedule, teams)
+    team_schedule = create_team_schedule(schedule)
 
     for team in team_schedule:
         s = team_schedule[team]
@@ -68,9 +68,9 @@ def calculate_total_distance(schedule, teams):
 """
 Calculates total number of back to back games played by all teams in given schedule
 """
-def calculate_b2b_games(schedule, teams):
+def calculate_b2b_games(schedule):
     num_b2b = 0
-    team_schedule = create_team_schedule(schedule, teams)
+    team_schedule = create_team_schedule(schedule)
 
     # calculate number of b2b games for each team, count, and return count
     for team in team_schedule:
@@ -87,7 +87,7 @@ def calculate_b2b_games(schedule, teams):
 """
 Checks if given schedule complies with constraints
 """
-def is_constraint_compliant(schedule, teams):
+def is_constraint_compliant(schedule):
     """
     constraints:
     1: 4 games against the other 4 division opponents (4×4=16 games)
@@ -95,7 +95,7 @@ def is_constraint_compliant(schedule, teams):
     3: 3 games against the remaining 4 conference teams (3×4=12 games)
     4: 2 games against teams in the opposing conference (2×15=30 games)
     """
-    team_schedule = create_team_schedule(schedule, teams)
+    team_schedule = create_team_schedule(schedule)
 
     # structure of count map is {(team1, team2) : num_games_played}
     count_map = {}
@@ -149,6 +149,13 @@ def is_constraint_compliant(schedule, teams):
                 return False
     return True
 
+"""
+Returns objective value of given schedule
+"""
+def get_objective_value(schedule):
+    w1 = 0.5
+    w2 = 0.5
+    return (w1 * calculate_total_distance(schedule)) + (w2 * calculate_b2b_games(schedule))
 
 """
 SETUP (applicable for any schedule)
@@ -242,9 +249,7 @@ for i in range(len(games)):
     curr.append(home)
     schedule.append(curr)
 
-print(calculate_b2b_games(schedule, teams))
-print(calculate_total_distance(schedule, teams))
-print(is_constraint_compliant(schedule, teams))
+print(get_objective_value(schedule))
 
 # SCHEDULE 2 
 games = pd.read_csv('games2.csv')
@@ -272,9 +277,7 @@ for i in range(100):
     schedule[r1][1], schedule[r1][2] = schedule[r2][1], schedule[r2][2]
     schedule[r2][1], schedule[r2][2] = temp_visitor, temp_home
 
-print(calculate_b2b_games(schedule, teams))
-print(calculate_total_distance(schedule, teams))
-print(is_constraint_compliant(schedule, teams))
+print(get_objective_value(schedule))
 
 """
 Simulated Annealing solution
