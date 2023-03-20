@@ -155,8 +155,8 @@ def is_constraint_compliant(schedule):
 Returns objective value of given schedule
 """
 def get_objective_value(schedule):
-    w1 = 0.5
-    w2 = 0.5
+    w1 = 1
+    w2 = 1000
     return (w1 * calculate_total_distance(schedule)) + (w2 * calculate_b2b_games(schedule))
 
 """
@@ -165,7 +165,7 @@ Finds neighboring schedule
 def get_neighbor_schedule(schedule):
     neighbor = copy.deepcopy(schedule)
     # random swapping of games in schedule
-    for i in range(5):
+    for i in range(2):
         r1 = random.randint(0, len(schedule)-1)
         r2 = random.randint(0, len(schedule)-1)
         temp_visitor = neighbor[r1][1]
@@ -302,7 +302,7 @@ Simulated Annealing solution
 
 k = 1
 T = 100
-num_iterations = 100
+num_iterations = 1000
 a = 0.9
 
 temp = T*(a**k)
@@ -310,7 +310,10 @@ s0 = copy.deepcopy(schedule)
 sk = copy.deepcopy(schedule)
 
 initial_schedule_obj = get_objective_value(schedule)
+print("Number of iterations is: " + str(num_iterations))
 print("Initial objective function value of schedule is: " + str(initial_schedule_obj))
+print("Initial distance travelled is: " + str(calculate_total_distance(schedule)))
+print("Initial number of b2b games is: " + str(calculate_b2b_games(schedule)))
 
 while k <= num_iterations:
     sc = get_neighbor_schedule(sk)
@@ -325,6 +328,8 @@ while k <= num_iterations:
         sk = sc
     elif (obj_sc > obj_sk):
         uk = random.uniform(0,1)
+        if temp == 0:
+            break
         prob = math.exp(-1*(obj_sc - obj_sk) / temp)
         if (uk <= prob):
             sk = sc
@@ -334,3 +339,5 @@ while k <= num_iterations:
 
 final_schedule_obj = get_objective_value(sk)
 print("Final objective function value of updated schedule is: " + str(final_schedule_obj))
+print("Final distance travelled is: " + str(calculate_total_distance(sk)))
+print("Final number of b2b games is: " + str(calculate_b2b_games(sk)))
