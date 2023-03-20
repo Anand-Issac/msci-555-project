@@ -1,6 +1,7 @@
 import pandas as pd
 from math import radians, cos, sin, asin, sqrt
 from dateutil import parser
+import random
 
 """
 HELPER FUNCTIONS
@@ -46,19 +47,22 @@ def create_team_schedule(schedule, teams):
 
 """
 Calculates the total distance travelled by all teams in the given schedule
+
+logic: 
+for each team, go through each game of their schedule, and add the distance to go from the HOME TEAM  directly to the next game
+ex. schedule is like Raptors -> Celtics (home), Raptors -> Warriors (home), Cavs -> Raptors (home)
+distance = teams_distances(raptors, celtics) + teams_distances(celtics, warriors) + teams_distances(warriors, raptors)
 """
 def calculate_total_distance(schedule, teams):
     total_dist = 0
     team_schedule = create_team_schedule(schedule, teams)
 
-    # calculates distance travelled by each team 
     for team in team_schedule:
         s = team_schedule[team]
+        prev = team
         for j in range(len(s)):
-            # if team is the visiting team, add distance between visiting team and home team 
-            if team == s[j][1]:
-                total_dist += teams_distances[(s[j][1], s[j][2])]
-
+            total_dist += teams_distances[(prev, s[j][2])]
+            prev = s[j][2]
     return total_dist
 
 """
@@ -160,19 +164,13 @@ for i in range(len(t)):
     arenas.append(team["ARENA"])
     c+= 1
 
-# writing to coords.csv file
-# f = open("coords.csv", "a")
-
-# for i in range(len(teams)):
-#     f.write(teams[i] + ",\n")
-
-# f.close()
-
 #creating map of each team and their division and conference
 # structure is {team_name : [conference, division]}
 teams_confs_divs = {}
 confs_divs = pd.read_csv('divisions_conferences.csv') 
 
+# creating maps for all teams in each conference and division
+# structure is confs = {conference : [teams in conf]} and divs = {division : [teams in division]}
 confs = {}
 confs["Eastern"] = []
 confs["Western"] = []
@@ -221,9 +219,6 @@ for i in range(len(teams_coords)):
         lon2 = teams_coords[j][2]
         teams_distances[(team1, team2)] = haversine(lat1, lon1, lat2, lon2)
 
-#print(teams_distances)
-
-
 """
 SCHEDULE(s) 
 building structure for 2020 nba season schedule
@@ -268,7 +263,7 @@ for i in range(len(games)):
     curr.append(home)
     schedule.append(curr)
 
-import random
+# swapping games in schedule
 for i in range(100):
     r1 = random.randint(0, len(schedule)-1)
     r2 = random.randint(0, len(schedule)-1)
@@ -280,14 +275,6 @@ for i in range(100):
 print(calculate_b2b_games(schedule, teams))
 print(calculate_total_distance(schedule, teams))
 print(is_constraint_compliant(schedule, teams))
-
-"""
-TODO: calculate the total distance like this
-for each team 
-go through each game of their schedule, and add the distance to go from the HOME TEAM  directly to the next game
-ex. schedule is like Raptors -> Celtics (home), Raptors -> Warriors (home), Cavs -> Raptors (home)
-distance = teams_distances(raptors, celtics) + teams_distances(celtics, warriors) + teams_distances(warriors, raptors)
-"""
 
 """
 Simulated Annealing solution
