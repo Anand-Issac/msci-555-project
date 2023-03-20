@@ -1,3 +1,5 @@
+import copy
+import math
 import pandas as pd
 from math import radians, cos, sin, asin, sqrt
 from dateutil import parser
@@ -158,6 +160,21 @@ def get_objective_value(schedule):
     return (w1 * calculate_total_distance(schedule)) + (w2 * calculate_b2b_games(schedule))
 
 """
+Finds neighboring schedule
+"""
+def get_neighbor_schedule(schedule):
+    neighbor = copy.deepcopy(schedule)
+    # random swapping of games in schedule
+    for i in range(5):
+        r1 = random.randint(0, len(schedule)-1)
+        r2 = random.randint(0, len(schedule)-1)
+        temp_visitor = neighbor[r1][1]
+        temp_home = neighbor[r1][2]
+        neighbor[r1][1], neighbor[r1][2] = neighbor[r2][1], neighbor[r2][2]
+        neighbor[r2][1], neighbor[r2][2] = temp_visitor, temp_home
+    return neighbor
+    
+"""
 SETUP (applicable for any schedule)
 """
 
@@ -252,33 +269,68 @@ for i in range(len(games)):
 print(get_objective_value(schedule))
 
 # SCHEDULE 2 
-games = pd.read_csv('games2.csv')
+# games2 = pd.read_csv('games2.csv')
 
 # structure will be array of [datetime obj of game, visiting team, home team]
-schedule = []
+# schedule2 = []
 
-for i in range(len(games)):
-    game = games.iloc[i]
-    curr = []
-    date = parser.parse(game["Date"])
-    visitor = game["Visitor/Neutral"]
-    home = game["Home/Neutral"]
-    curr.append(date)
-    curr.append(visitor)
-    curr.append(home)
-    schedule.append(curr)
+# for i in range(len(games2)):
+#     game2 = games2.iloc[i]
+#     curr = []
+#     date = parser.parse(game2["Date"])
+#     visitor = game2["Visitor/Neutral"]
+#     home = game2["Home/Neutral"]
+#     curr.append(date)
+#     curr.append(visitor)
+#     curr.append(home)
+#     schedule2.append(curr)
 
-# swapping games in schedule
-for i in range(100):
-    r1 = random.randint(0, len(schedule)-1)
-    r2 = random.randint(0, len(schedule)-1)
-    temp_visitor = schedule[r1][1]
-    temp_home = schedule[r1][2]
-    schedule[r1][1], schedule[r1][2] = schedule[r2][1], schedule[r2][2]
-    schedule[r2][1], schedule[r2][2] = temp_visitor, temp_home
+# # swapping games in schedule
+# for i in range(100):
+#     r1 = random.randint(0, len(schedule)-1)
+#     r2 = random.randint(0, len(schedule)-1)
+#     temp_visitor = schedule2[r1][1]
+#     temp_home = schedule2[r1][2]
+#     schedule2[r1][1], schedule2[r1][2] = schedule2[r2][1], schedule2[r2][2]
+#     schedule2[r2][1], schedule2[r2][2] = temp_visitor, temp_home
 
-print(get_objective_value(schedule))
+# print(get_objective_value(schedule2))
 
 """
 Simulated Annealing solution
 """
+
+k = 1
+T = 100
+num_iterations = 100
+a = 0.9
+
+temp = T*(a**k)
+s0 = copy.deepcopy(schedule)
+sk = copy.deepcopy(schedule)
+
+initial_schedule_obj = get_objective_value(schedule)
+print("Initial objective function value of schedule is: " + str(initial_schedule_obj))
+
+while k <= num_iterations:
+    sc = get_neighbor_schedule(sk)
+    obj_s0 = get_objective_value(s0)
+    obj_sc = get_objective_value(sc)
+    obj_sk = get_objective_value(sk)
+
+    if (obj_s0 < obj_sc and obj_sc < obj_sk):
+        sk = sc
+    elif (obj_sc < obj_s0):
+        s0 = sc
+        sk = sc
+    elif (obj_sc > obj_sk):
+        uk = random.uniform(0,1)
+        prob = math.exp(-1*(obj_sc - obj_sk) / temp)
+        if (uk <= prob):
+            sk = sc
+        # else sk remains the same 
+    k += 1
+    temp = T*(a**k)
+
+final_schedule_obj = get_objective_value(sk)
+print("Final objective function value of updated schedule is: " + str(final_schedule_obj))
