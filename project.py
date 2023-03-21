@@ -4,6 +4,8 @@ import pandas as pd
 from math import radians, cos, sin, asin, sqrt
 from dateutil import parser
 import random
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 """
 HELPER FUNCTIONS
@@ -163,16 +165,18 @@ def get_objective_value(schedule):
 Finds neighboring schedule
 """
 def get_neighbor_schedule(schedule):
-    neighbor = copy.deepcopy(schedule)
-    # random swapping of games in schedule
-    for i in range(2):
-        r1 = random.randint(0, len(schedule)-1)
-        r2 = random.randint(0, len(schedule)-1)
-        temp_visitor = neighbor[r1][1]
-        temp_home = neighbor[r1][2]
-        neighbor[r1][1], neighbor[r1][2] = neighbor[r2][1], neighbor[r2][2]
-        neighbor[r2][1], neighbor[r2][2] = temp_visitor, temp_home
-    return neighbor
+    while True:
+        neighbor = copy.deepcopy(schedule)
+        # random swapping of games in schedule
+        for i in range(2):
+            r1 = random.randint(0, len(schedule)-1)
+            r2 = random.randint(0, len(schedule)-1)
+            temp_visitor = neighbor[r1][1]
+            temp_home = neighbor[r1][2]
+            neighbor[r1][1], neighbor[r1][2] = neighbor[r2][1], neighbor[r2][2]
+            neighbor[r2][1], neighbor[r2][2] = temp_visitor, temp_home
+        if is_constraint_compliant(neighbor):
+            return neighbor
     
 """
 SETUP (applicable for any schedule)
@@ -300,44 +304,109 @@ print(get_objective_value(schedule))
 Simulated Annealing solution
 """
 
-k = 1
-T = 100
-num_iterations = 1000
-a = 0.9
-
-temp = T*(a**k)
-s0 = copy.deepcopy(schedule)
-sk = copy.deepcopy(schedule)
+num_iterations_list = [0, 10, 50, 100, 200, 500, 1000, 5000]
+#num_iterations_list = [0, 10, 50, 100]
+obj_values = []
+distance_travelled_list = []
+num_b2b_list = []
 
 initial_schedule_obj = get_objective_value(schedule)
-print("Number of iterations is: " + str(num_iterations))
+initial_schedule_distance = calculate_total_distance(schedule)
+initial_b2b_games = calculate_b2b_games(schedule)
 print("Initial objective function value of schedule is: " + str(initial_schedule_obj))
-print("Initial distance travelled is: " + str(calculate_total_distance(schedule)))
-print("Initial number of b2b games is: " + str(calculate_b2b_games(schedule)))
+print("Initial distance travelled is: " + str(initial_schedule_distance))
+print("Initial number of b2b games is: " + str(initial_b2b_games))
 
-while k <= num_iterations:
-    sc = get_neighbor_schedule(sk)
-    obj_s0 = get_objective_value(s0)
-    obj_sc = get_objective_value(sc)
-    obj_sk = get_objective_value(sk)
+obj_values.append(initial_schedule_obj)
+distance_travelled_list.append(initial_schedule_distance)
+num_b2b_list.append(initial_b2b_games)
 
-    if (obj_s0 < obj_sc and obj_sc < obj_sk):
-        sk = sc
-    elif (obj_sc < obj_s0):
-        s0 = sc
-        sk = sc
-    elif (obj_sc > obj_sk):
-        uk = random.uniform(0,1)
-        if temp == 0:
-            break
-        prob = math.exp(-1*(obj_sc - obj_sk) / temp)
-        if (uk <= prob):
-            sk = sc
-        # else sk remains the same 
-    k += 1
+
+for i in range(1, len(num_iterations_list)):
+    k = 1
+    T = 100
+    num_iterations = num_iterations_list[i]
+    a = 0.9
+
     temp = T*(a**k)
+    s0 = copy.deepcopy(schedule)
+    sk = copy.deepcopy(schedule)
 
-final_schedule_obj = get_objective_value(sk)
-print("Final objective function value of updated schedule is: " + str(final_schedule_obj))
-print("Final distance travelled is: " + str(calculate_total_distance(sk)))
-print("Final number of b2b games is: " + str(calculate_b2b_games(sk)))
+    print("Number of iterations is: " + str(num_iterations))
+
+    while k <= num_iterations:
+        sc = get_neighbor_schedule(sk)
+        obj_s0 = get_objective_value(s0)
+        obj_sc = get_objective_value(sc)
+        obj_sk = get_objective_value(sk)
+
+        if (obj_s0 < obj_sc and obj_sc < obj_sk):
+            sk = sc
+        elif (obj_sc < obj_s0):
+            s0 = sc
+            sk = sc
+        elif (obj_sc > obj_sk):
+            uk = random.uniform(0,1)
+            if temp == 0:
+                break
+            prob = math.exp(-1*(obj_sc - obj_sk) / temp)
+            if (uk <= prob):
+                sk = sc
+            # else sk remains the same 
+        k += 1
+        temp = T*(a**k)
+
+    final_schedule_obj = get_objective_value(sk)
+    final_schedule_distance = calculate_total_distance(sk)
+    final_b2b_games = calculate_b2b_games(sk)
+    print("Final objective function value of updated schedule is: " + str(final_schedule_obj))
+    print("Final distance travelled is: " + str(final_schedule_distance))
+    print("Final number of b2b games is: " + str(final_b2b_games))
+
+    # add to lists 
+    obj_values.append(final_schedule_obj)
+    distance_travelled_list.append(final_schedule_distance)
+    num_b2b_list.append(final_b2b_games)
+
+# Visualizations
+print(num_iterations_list)
+print(obj_values)
+print(distance_travelled_list)
+print(num_b2b_list)
+
+"""
+fig, axs = plt.subplots(3)
+fig.suptitle('Graph')
+axs[0].plot(num_iterations_list, obj_values)
+axs[1].plot(num_iterations_list, distance_travelled_list)
+axs[2].bar(num_iterations_list, num_b2b_list)
+plt.show()
+"""
+
+sns.set_style("darkgrid")
+plt.plot(num_iterations_list, obj_values)
+plt.xlabel('Number of iterations')
+plt.ylabel('Objective value')
+plt.title('Objective values of Simulated Annealing schedule iterations')
+plt.show()
+plt.close()
+
+sns.set_style("darkgrid")
+plt.plot(num_iterations_list, distance_travelled_list)
+plt.xlabel('Number of iterations')
+plt.ylabel('Distance travelled')
+plt.title('Distance travelled of Simulated Annealing schedule iterations')
+plt.show()
+plt.close()
+
+nil_copy = ["0", "10", "50", "100", "200", "500", "1000", "5000"]
+sns.set_style("darkgrid")
+plt.bar(nil_copy, num_b2b_list)
+plt.xlabel('Number of iterations')
+plt.ylabel('Number of b2b games')
+plt.title('Number of b2b games of Simulated Annealing schedule iterations')
+plt.ylim(bottom=200)
+plt.show()
+plt.close()
+
+
