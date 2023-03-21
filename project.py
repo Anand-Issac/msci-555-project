@@ -374,15 +374,7 @@ print(obj_values)
 print(distance_travelled_list)
 print(num_b2b_list)
 
-"""
-fig, axs = plt.subplots(3)
-fig.suptitle('Graph')
-axs[0].plot(num_iterations_list, obj_values)
-axs[1].plot(num_iterations_list, distance_travelled_list)
-axs[2].bar(num_iterations_list, num_b2b_list)
-plt.show()
-"""
-
+# https://www.geeksforgeeks.org/graph-plotting-in-python-set-1/
 sns.set_style("darkgrid")
 plt.plot(num_iterations_list, obj_values)
 plt.xlabel('Number of iterations')
