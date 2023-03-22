@@ -6,6 +6,7 @@ from dateutil import parser
 import random
 import seaborn as sns
 import matplotlib.pyplot as plt
+import csv  
 
 """
 HELPER FUNCTIONS
@@ -321,6 +322,16 @@ obj_values.append(initial_schedule_obj)
 distance_travelled_list.append(initial_schedule_distance)
 num_b2b_list.append(initial_b2b_games)
 
+#write initial schedule to csv file
+header = ['Date', 'Visitor', 'Home']
+
+with open('initial_schedule.csv', 'w', encoding='UTF8') as f:
+    writer = csv.writer(f)
+    # write the header
+    writer.writerow(header)
+    # write the data
+    for game in schedule:
+        writer.writerow(game)
 
 for i in range(1, len(num_iterations_list)):
     k = 1
@@ -368,6 +379,18 @@ for i in range(1, len(num_iterations_list)):
     distance_travelled_list.append(final_schedule_distance)
     num_b2b_list.append(final_b2b_games)
 
+#write final schedule to csv file
+header = ['Date', 'Visitor', 'Home']
+
+with open('final_schedule.csv', 'w', encoding='UTF8') as f:
+    writer = csv.writer(f)
+    # write the header
+    writer.writerow(header)
+    # write the data
+    for game in sk:
+        writer.writerow(game)
+    
+
 # Visualizations
 print(num_iterations_list)
 print(obj_values)
@@ -392,6 +415,7 @@ plt.show()
 plt.close()
 
 nil_copy = ["0", "10", "50", "100", "200", "500", "1000", "5000"]
+#nil_copy = ["0", "10", "50", "100"]
 sns.set_style("darkgrid")
 plt.bar(nil_copy, num_b2b_list)
 plt.xlabel('Number of iterations')
