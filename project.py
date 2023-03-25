@@ -6,7 +6,8 @@ from dateutil import parser
 import random
 import seaborn as sns
 import matplotlib.pyplot as plt
-import csv  
+import csv
+import statistics  
 
 """
 HELPER FUNCTIONS
@@ -88,6 +89,22 @@ def calculate_b2b_games(schedule):
             if ((delta.days == 1 ) and b2b):
                 num_b2b += 1
     return num_b2b
+
+"""
+Calculates the distance travelled by each teams in the given schedule
+"""
+def calculate_team_distance(schedule):
+    team_schedule = create_team_schedule(schedule)
+    team_distance = {}
+
+    for team in team_schedule:
+        s = team_schedule[team]
+        team_distance[team] = 0
+        prev = team
+        for j in range(len(s)):
+            team_distance[team] += teams_distances[(prev, s[j][2])]
+            prev = s[j][2]
+    return team_distance
 
 """
 Checks if given schedule complies with constraints
@@ -379,9 +396,24 @@ for i in range(1, len(num_iterations_list)):
     distance_travelled_list.append(final_schedule_distance)
     num_b2b_list.append(final_b2b_games)
 
+print("Total Distances of each team ")
+td = calculate_team_distance(sk)
+distances = []
+#write distance of each team to csv file
+header = ['Team', 'Distance']
+with open('distances.csv', 'w', encoding='UTF8') as f:
+    writer = csv.writer(f)
+    # write the header
+    writer.writerow(header)
+    # write the data
+    for team in td:
+        writer.writerow([team, td[team]])
+        distances.append(td[team])
+print("The mean distance that teams travel are: " + str(statistics.mean(distances)))
+print("The variance of the data is: " + str(statistics.variance(distances)))
+
 #write final schedule to csv file
 header = ['Date', 'Visitor', 'Home']
-
 with open('final_schedule.csv', 'w', encoding='UTF8') as f:
     writer = csv.writer(f)
     # write the header
